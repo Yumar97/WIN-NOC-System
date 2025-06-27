@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WIN NOC - Centro de Operaciones de Red</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .metric-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .online { color: #10b981; }
+        .warning { color: #f59e0b; }
+        .critical { color: #ef4444; }
+        .info { color: #3b82f6; }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .panel-header {
+            background: #f8fafc;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 600;
+        }
+        
+        .panel-content {
+            padding: 1.5rem;
+        }
+        
+        .device-list, .incident-list {
+            list-style: none;
+        }
+        
+        .device-item, .incident-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .device-item:last-child, .incident-item:last-child {
+            border-bottom: none;
+        }
+        
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .status-online { background: #10b981; }
+        .status-warning { background: #f59e0b; }
+        .status-offline { background: #ef4444; }
+        .status-critical { background: #dc2626; }
+        
+        .priority-critical { color: #ef4444; font-weight: bold; }
+        .priority-high { color: #f59e0b; font-weight: bold; }
+        .priority-medium { color: #3b82f6; }
+        .priority-low { color: #6b7280; }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #5a67d8;
+        }
+        
+        .refresh-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            font-size: 1.2rem;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">�� WIN NOC</div>
+        <div class="user-info">
+            <span>👤 Administrador</span>
+            <button class="btn" onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Métricas principales -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value online" id="devices-online">-</div>
+                <div class="metric-label">Dispositivos Online</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value info" id="availability">-</div>
+                <div class="metric-label">Disponibilidad de Red</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value warning" id="open-incidents">-</div>
+                <div class="metric-label">Incidencias Abiertas</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value online" id="satisfaction">-</div>
+                <div class="metric-label">Satisfacción Cliente</div>
+            </div>
+        </div>
+        
+        <!-- Contenido principal -->
+        <div class="content-grid">
+            <!-- Dispositivos de Red -->
+            <div class="panel">
+                <div class="panel-header">
+                    🖥️ Dispositivos de Red
+                </div>
+                <div class="panel-content">
+                    <ul class="device-list" id="device-list">
+                        <li class="loading">Cargando dispositivos...</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Incidencias Activas -->
+            <div class="panel">
+                <div class="panel-header">
+                    🚨 Incidencias Activas
+                </div>
+                <div class="panel-content">
+                    <ul class="incident-list" id="incident-list">
+                        <li class="loading">Cargando incidencias...</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Predicciones de IA -->
+        <div class="panel">
+            <div class="panel-header">
+                🤖 Predicciones de IA - Próximas 24 Horas
+            </div>
+            <div class="panel-content">
+                <div id="predictions-content">
+                    <div class="loading">Generando predicciones...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <button class="refresh-btn" onclick="refreshData()" title="Actualizar datos">
+        🔄
+    </button>
+    
+    <script>
+        // Función para cargar datos del dashboard
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/api/dashboard/overview');
+                const data = await response.json();
+                
+                document.getElementById('devices-online').textContent = `${data.devices_online}/${data.devices_total}`;
+                document.getElementById('availability').textContent = `${data.availability}%`;
+                document.getElementById('open-incidents').textContent = data.open_incidents;
+                document.getElementById('satisfaction').textContent = `${data.avg_satisfaction}/5`;
+            } catch (error) {
+                console.error('Error cargando datos del dashboard:', error);
+            }
+        }
+        
+        // Función para cargar dispositivos
+        async function loadDevices() {
+            try {
+                const response = await fetch('/api/devices');
+                const devices = await response.json();
+                
+                const deviceList = document.getElementById('device-list');
+                deviceList.innerHTML = '';
+                
+                devices.forEach(device => {
+                    const li = document.createElement('li');
+                    li.className = 'device-item';
+                    li.innerHTML = `
+                        <div style="display: flex; align-items: center;">
+                            <span class="status-indicator status-${device.status}"></span>
+                            <div>
+                                <strong>${device.name}</strong><br>
+                                <small>${device.ip} - ${device.location}</small>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <small>CPU: ${device.cpu}%</small><br>
+                            <small>RAM: ${device.memory}%</small>
+                        </div>
+                    `;
+                    deviceList.appendChild(li);
+                });
+            } catch (error) {
+                console.error('Error cargando dispositivos:', error);
+            }
+        }
+        
+        // Función para cargar incidencias
+        async function loadIncidents() {
+            try {
+                const response = await fetch('/api/incidents');
+                const incidents = await response.json();
+                
+                const incidentList = document.getElementById('incident-list');
+                incidentList.innerHTML = '';
+                
+                incidents.forEach(incident => {
+                    const li = document.createElement('li');
+                    li.className = 'incident-item';
+                    li.innerHTML = `
+                        <div>
+                            <strong>${incident.title}</strong><br>
+                            <small>Asignado a: ${incident.assigned}</small>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="priority-${incident.priority}">${incident.priority.toUpperCase()}</span><br>
+                            <small>${incident.created}</small>
+                        </div>
+                    `;
+                    incidentList.appendChild(li);
+                });
+            } catch (error) {
+                console.error('Error cargando incidencias:', error);
+            }
+        }
+        
+        // Función para cargar predicciones
+        async function loadPredictions() {
+            try {
+                const response = await fetch('/api/predict/network');
+                const data = await response.json();
+                
+                const predictionsContent = document.getElementById('predictions-content');
+                predictionsContent.innerHTML = '';
+                
+                data.predictions.forEach(prediction => {
+                    const div = document.createElement('div');
+                    div.style.marginBottom = '1rem';
+                    div.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #f8fafc; border-radius: 5px;">
+                            <div>
+                                <strong>${prediction.device_name}</strong><br>
+                                <small>CPU Actual: ${prediction.current_cpu}%</small>
+                            </div>
+                            <div style="text-align: right;">
+                                <span class="priority-${prediction.risk_level}">Riesgo: ${prediction.risk_level.toUpperCase()}</span><br>
+                                <small>CPU Max Predicho: ${Math.max(...prediction.predicted_cpu)}%</small>
+                            </div>
+                        </div>
+                    `;
+                    predictionsContent.appendChild(div);
+                });
+            } catch (error) {
+                console.error('Error cargando predicciones:', error);
+            }
+        }
+        
+        // Función para actualizar todos los datos
+        function refreshData() {
+            loadDashboardData();
+            loadDevices();
+            loadIncidents();
+            loadPredictions();
+        }
+        
+        // Función para cerrar sesión
+        function logout() {
+            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                window.location.href = '/login';
+            }
+        }
+        
+        // Cargar datos iniciales
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshData();
+            
+            // Actualizar datos cada 30 segundos
+            setInterval(refreshData, 30000);
+        });
+    </script>
+</body>
+</html>

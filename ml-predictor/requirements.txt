@@ -1,0 +1,81 @@
+# Framework web
+Flask==3.0.0
+Flask-CORS==4.0.0
+Flask-RESTful==0.3.10
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.5
+
+# Machine Learning y Data Science
+tensorflow==2.15.0
+scikit-learn==1.3.2
+pandas==2.1.4
+numpy==1.24.4
+matplotlib==3.8.2
+seaborn==0.13.0
+plotly==5.17.0
+
+# Procesamiento de datos
+scipy==1.11.4
+statsmodels==0.14.1
+joblib==1.3.2
+
+# Base de datos
+psycopg2-binary==2.9.9
+SQLAlchemy==2.0.23
+
+# Utilidades
+python-dotenv==1.0.0
+requests==2.31.0
+schedule==1.2.0
+APScheduler==3.10.4
+
+# Logging y monitoreo
+structlog==23.2.0
+
+# Validación de datos
+marshmallow==3.20.2
+cerberus==1.3.5
+
+# Análisis de series temporales
+prophet==1.1.5
+pmdarima==2.0.4
+
+# Clustering y análisis de anomalías
+pyod==1.1.3
+isolation-forest==0.0.3
+
+# Procesamiento de texto (para análisis de logs)
+nltk==3.8.1
+textblob==0.17.1
+
+# Visualización avanzada
+bokeh==3.3.2
+
+# Utilidades de desarrollo
+pytest==7.4.3
+pytest-cov==4.1.0
+black==23.12.0
+flake8==6.1.0
+
+# Producción
+gunicorn==21.2.0
+redis==5.0.1
+
+# Monitoreo de modelos
+evidently==0.4.11
+
+# Optimización de hiperparámetros
+optuna==3.5.0
+
+# Manejo de fechas
+python-dateutil==2.8.2
+
+# Configuración
+pydantic==2.5.2
+pydantic-settings==2.1.0
+
+# Caching
+diskcache==5.6.3
+
+# Métricas y alertas
+prometheus-client==0.19.0

@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  # Base de datos PostgreSQL
+  postgres:
+    image: postgres:15
+    container_name: win-noc-postgres
+    environment:
+      POSTGRES_DB: win_noc_db
+      POSTGRES_USER: win_admin
+      POSTGRES_PASSWORD: win_secure_2024
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - win-noc-network
+
+  # Backend API
+  backend:
+    build: ./backend
+    container_name: win-noc-backend
+    environment:
+      NODE_ENV: development
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: win_noc_db
+      DB_USER: win_admin
+      DB_PASSWORD: win_secure_2024
+      JWT_SECRET: win_jwt_secret_key_2024
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - win-noc-network
+    command: npm run dev
+
+  # Frontend React
+  frontend:
+    build: ./frontend
+    container_name: win-noc-frontend
+    environment:
+      REACT_APP_API_URL: http://localhost:3001/api
+      REACT_APP_ML_API_URL: http://localhost:5000/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - win-noc-network
+    command: npm start
+
+  # Módulo de IA/ML
+  ml-predictor:
+    build: ./ml-predictor
+    container_name: win-noc-ml
+    environment:
+      FLASK_ENV: development
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: win_noc_db
+      DB_USER: win_admin
+      DB_PASSWORD: win_secure_2024
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+    volumes:
+      - ./ml-predictor:/app
+    networks:
+      - win-noc-network
+    command: python app.py
+
+  # Redis para cache y sesiones
+  redis:
+    image: redis:7-alpine
+    container_name: win-noc-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - win-noc-network
+
+  # Nginx como proxy reverso
+  nginx:
+    image: nginx:alpine
+    container_name: win-noc-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - frontend
+      - backend
+      - ml-predictor
+    networks:
+      - win-noc-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  win-noc-network:
+    driver: bridge
