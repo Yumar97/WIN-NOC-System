@@ -176,6 +176,140 @@ def analytics_incidents():
         }
     })
 
+# Endpoints para simulación y testing
+@app.route('/api/simulate/add-device', methods=['POST'])
+def simulate_add_device():
+    """Agregar dispositivo simulado para testing"""
+    device_types = ['Router', 'Switch', 'Firewall', 'Access Point', 'Server']
+    locations = ['Lima Centro', 'Lima Norte', 'Lima Sur', 'Callao', 'Arequipa', 'Trujillo', 'Cusco', 'Piura']
+    
+    new_device = {
+        'id': len(network_devices) + 1,
+        'name': f"{random.choice(device_types)} {random.choice(['Principal', 'Secundario', 'Backup'])} {random.choice(locations)}",
+        'ip': f"192.168.{random.randint(1, 10)}.{random.randint(1, 254)}",
+        'status': random.choice(['online', 'warning', 'offline']),
+        'cpu': random.randint(10, 95),
+        'memory': random.randint(20, 95),
+        'location': random.choice(locations)
+    }
+    
+    network_devices.append(new_device)
+    return jsonify({'success': True, 'device': new_device, 'message': 'Dispositivo agregado exitosamente'})
+
+@app.route('/api/simulate/add-incident', methods=['POST'])
+def simulate_add_incident():
+    """Agregar incidencia simulada para testing"""
+    incident_types = [
+        'Caída de dispositivo de red',
+        'Alto uso de CPU',
+        'Memoria insuficiente',
+        'Latencia elevada',
+        'Pérdida de paquetes',
+        'Falla de conectividad',
+        'Sobrecarga de tráfico',
+        'Error de configuración'
+    ]
+    
+    priorities = ['low', 'medium', 'high', 'critical']
+    technicians = ['Juan Pérez', 'María García', 'Carlos López', 'Ana Rodríguez', 'Luis Martínez']
+    
+    new_incident = {
+        'id': len(incidents) + 1,
+        'title': random.choice(incident_types),
+        'status': 'open',
+        'priority': random.choice(priorities),
+        'created': datetime.now().strftime('%Y-%m-%d %H:%M'),
+        'assigned': random.choice(technicians)
+    }
+    
+    incidents.append(new_incident)
+    return jsonify({'success': True, 'incident': new_incident, 'message': 'Incidencia agregada exitosamente'})
+
+@app.route('/api/simulate/add-customer', methods=['POST'])
+def simulate_add_customer():
+    """Agregar cliente simulado para testing"""
+    company_types = ['SAC', 'EIRL', 'SRL', 'SA']
+    business_names = [
+        'TechCorp', 'DataSystems', 'NetSolutions', 'CloudTech', 'InfoServices',
+        'DigitalPro', 'CyberNet', 'SmartTech', 'ConnectPlus', 'WebMaster'
+    ]
+    plans = ['Básico', 'Empresarial', 'Corporativo', 'Premium', 'Gubernamental']
+    
+    new_customer = {
+        'id': len(customers) + 1,
+        'name': f"{random.choice(business_names)} {random.choice(company_types)}",
+        'plan': random.choice(plans),
+        'status': 'active',
+        'satisfaction': round(random.uniform(3.0, 5.0), 1)
+    }
+    
+    customers.append(new_customer)
+    return jsonify({'success': True, 'customer': new_customer, 'message': 'Cliente agregado exitosamente'})
+
+@app.route('/api/simulate/generate-load', methods=['POST'])
+def simulate_generate_load():
+    """Generar carga de datos simulados para testing completo"""
+    # Agregar múltiples dispositivos
+    for _ in range(5):
+        simulate_add_device()
+    
+    # Agregar múltiples incidencias
+    for _ in range(3):
+        simulate_add_incident()
+    
+    # Agregar múltiples clientes
+    for _ in range(4):
+        simulate_add_customer()
+    
+    return jsonify({
+        'success': True,
+        'message': 'Carga de datos simulados generada exitosamente',
+        'summary': {
+            'devices_added': 5,
+            'incidents_added': 3,
+            'customers_added': 4,
+            'total_devices': len(network_devices),
+            'total_incidents': len(incidents),
+            'total_customers': len(customers)
+        }
+    })
+
+@app.route('/api/simulate/reset-data', methods=['POST'])
+def simulate_reset_data():
+    """Resetear datos a valores iniciales"""
+    global network_devices, incidents, customers
+    
+    # Restaurar datos iniciales
+    network_devices = [
+        {'id': 1, 'name': 'Router Principal Lima', 'ip': '192.168.1.1', 'status': 'online', 'cpu': 45, 'memory': 67, 'location': 'Lima Centro'},
+        {'id': 2, 'name': 'Switch Core Callao', 'ip': '192.168.1.2', 'status': 'online', 'cpu': 32, 'memory': 54, 'location': 'Callao'},
+        {'id': 3, 'name': 'Firewall Perimetral', 'ip': '192.168.1.3', 'status': 'warning', 'cpu': 78, 'memory': 89, 'location': 'Lima Norte'},
+        {'id': 4, 'name': 'Router Arequipa', 'ip': '192.168.2.1', 'status': 'offline', 'cpu': 0, 'memory': 0, 'location': 'Arequipa'},
+        {'id': 5, 'name': 'Switch Trujillo', 'ip': '192.168.3.1', 'status': 'online', 'cpu': 23, 'memory': 41, 'location': 'Trujillo'},
+    ]
+    
+    incidents = [
+        {'id': 1, 'title': 'Caída de Router Arequipa', 'status': 'open', 'priority': 'critical', 'created': '2024-12-26 10:30', 'assigned': 'Juan Pérez'},
+        {'id': 2, 'title': 'Alto uso de CPU en Firewall', 'status': 'in_progress', 'priority': 'high', 'created': '2024-12-26 11:15', 'assigned': 'María García'},
+        {'id': 3, 'title': 'Latencia elevada en Lima Norte', 'status': 'resolved', 'priority': 'medium', 'created': '2024-12-26 09:45', 'assigned': 'Carlos López'},
+    ]
+    
+    customers = [
+        {'id': 1, 'name': 'Empresa ABC SAC', 'plan': 'Corporativo', 'status': 'active', 'satisfaction': 4.2},
+        {'id': 2, 'name': 'Retail XYZ EIRL', 'plan': 'Empresarial', 'status': 'active', 'satisfaction': 4.7},
+        {'id': 3, 'name': 'Gobierno Regional', 'plan': 'Gubernamental', 'status': 'active', 'satisfaction': 3.8},
+    ]
+    
+    return jsonify({
+        'success': True,
+        'message': 'Datos reseteados a valores iniciales',
+        'summary': {
+            'total_devices': len(network_devices),
+            'total_incidents': len(incidents),
+            'total_customers': len(customers)
+        }
+    })
+
 if __name__ == '__main__':
     # Crear directorio de templates si no existe
     os.makedirs('templates', exist_ok=True)

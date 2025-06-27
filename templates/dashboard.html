@@ -252,6 +252,47 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Panel de Simulación y Testing -->
+        <div class="panel">
+            <div class="panel-header">
+                🧪 Panel de Simulación y Testing
+            </div>
+            <div class="panel-content">
+                <div class="simulation-controls">
+                    <div class="control-group">
+                        <h4>Agregar Datos Individuales:</h4>
+                        <div class="button-group">
+                            <button class="btn sim-btn" onclick="addSimulatedDevice()">
+                                🖥️ Agregar Dispositivo
+                            </button>
+                            <button class="btn sim-btn" onclick="addSimulatedIncident()">
+                                🚨 Agregar Incidencia
+                            </button>
+                            <button class="btn sim-btn" onclick="addSimulatedCustomer()">
+                                👥 Agregar Cliente
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <h4>Operaciones Masivas:</h4>
+                        <div class="button-group">
+                            <button class="btn load-btn" onclick="generateTestLoad()">
+                                ⚡ Generar Carga de Prueba
+                            </button>
+                            <button class="btn reset-btn" onclick="resetData()">
+                                🔄 Resetear Datos
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="simulation-status" id="simulation-status">
+                        <p>💡 <strong>Tip:</strong> Usa estos botones para probar el sistema con datos simulados</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     
     <button class="refresh-btn" onclick="refreshData()" title="Actualizar datos">
