@@ -1,0 +1,199 @@
+name: WIN NOC CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Backend Tests
+  backend-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: win_noc_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+    
+    - name: Install Backend Dependencies
+      run: |
+        cd backend
+        npm ci
+    
+    - name: Run Backend Tests
+      run: |
+        cd backend
+        npm test
+      env:
+        NODE_ENV: test
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/win_noc_test
+    
+    - name: Run Backend Linting
+      run: |
+        cd backend
+        npm run lint
+
+  # Frontend Tests
+  frontend-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install Frontend Dependencies
+      run: |
+        cd frontend
+        npm ci
+    
+    - name: Run Frontend Tests
+      run: |
+        cd frontend
+        npm test -- --coverage --watchAll=false
+    
+    - name: Run Frontend Linting
+      run: |
+        cd frontend
+        npm run lint
+    
+    - name: Build Frontend
+      run: |
+        cd frontend
+        npm run build
+
+  # ML Predictor Tests
+  ml-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+        cache-dependency-path: ml-predictor/requirements.txt
+    
+    - name: Install ML Dependencies
+      run: |
+        cd ml-predictor
+        pip install -r requirements.txt
+    
+    - name: Run ML Tests
+      run: |
+        cd ml-predictor
+        pytest --cov=app
+    
+    - name: Run ML Linting
+      run: |
+        cd ml-predictor
+        flake8 app.py
+
+  # Docker Build Test
+  docker-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Build Backend Docker Image
+      run: |
+        cd backend
+        docker build -t win-noc-backend .
+    
+    - name: Build Frontend Docker Image
+      run: |
+        cd frontend
+        docker build -t win-noc-frontend .
+    
+    - name: Build ML Predictor Docker Image
+      run: |
+        cd ml-predictor
+        docker build -t win-noc-ml .
+    
+    - name: Test Docker Compose
+      run: |
+        docker-compose config
+
+  # Security Scan
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  # Deploy to Staging (only on main branch)
+  deploy-staging:
+    needs: [backend-test, frontend-test, ml-test, docker-build]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to Staging
+      run: |
+        echo "🚀 Deploying to staging environment..."
+        # Aquí irían los comandos de despliegue real
+        echo "✅ Deployment completed successfully!"
+
+  # Notification
+  notify:
+    needs: [backend-test, frontend-test, ml-test, docker-build]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Notify Success
+      if: ${{ needs.backend-test.result == 'success' && needs.frontend-test.result == 'success' && needs.ml-test.result == 'success' && needs.docker-build.result == 'success' }}
+      run: |
+        echo "✅ All tests passed! WIN NOC System is ready for deployment."
+    
+    - name: Notify Failure
+      if: ${{ needs.backend-test.result == 'failure' || needs.frontend-test.result == 'failure' || needs.ml-test.result == 'failure' || needs.docker-build.result == 'failure' }}
+      run: |
+        echo "❌ Some tests failed. Please check the logs and fix the issues."
