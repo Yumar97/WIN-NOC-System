@@ -1,0 +1,21 @@
+# WIN NOC System - Python Dependencies for Render Deployment
+
+# Framework web
+Flask==3.0.0
+Flask-CORS==4.0.0
+
+# Utilidades básicas
+python-dotenv==1.0.0
+requests==2.31.0
+
+# Servidor WSGI para producción
+gunicorn==21.2.0
+
+# Manejo de fechas
+python-dateutil==2.8.2
+
+# Procesamiento de datos básico
+numpy==1.24.4
+
+# Logging
+structlog==23.2.0

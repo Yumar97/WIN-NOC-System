@@ -1,0 +1,25 @@
+services:
+  # WIN NOC Main Application
+  - type: web
+    name: win-noc-system
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python win_noc_server.py
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: PYTHONUNBUFFERED
+        value: "1"
+    healthCheckPath: /
+    
+  # Static Files (opcional)
+  - type: static
+    name: win-noc-static
+    staticPublishPath: ./static
+    buildCommand: echo "Static files ready"
+    
+# Configuración de base de datos (opcional para futuro)
+# databases:
+#   - name: win-noc-db
+#     databaseName: win_noc
+#     user: win_noc_user
