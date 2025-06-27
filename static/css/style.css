@@ -1,0 +1,47 @@
+/* WIN NOC System - Estilos adicionales */
+
+.win-noc-logo {
+    font-weight: bold;
+    color: #667eea;
+}
+
+.status-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.status-online {
+    background-color: #10b981;
+}
+
+.status-warning {
+    background-color: #f59e0b;
+}
+
+.status-offline {
+    background-color: #ef4444;
+}
+
+.status-critical {
+    background-color: #dc2626;
+}
+
+/* Animaciones para indicadores */
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}

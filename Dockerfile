@@ -10,14 +10,20 @@ RUN apt-get update && apt-get install -y \
     g++ \
     && rm -rf /var/lib/apt/lists/*
 
-# Copiar archivos de la aplicación
-COPY win_noc_server.py .
-COPY templates/ templates/
-COPY static/ static/
+# Copiar requirements primero para aprovechar cache de Docker
 COPY requirements.txt .
 
 # Instalar dependencias de Python
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar archivos de la aplicación
+COPY win_noc_server.py .
+
+# Copiar directorios de la aplicación (con verificación)
+COPY . .
+
+# Crear directorios necesarios si no existen
+RUN mkdir -p templates static
 
 # Exponer puerto
 EXPOSE 5000
